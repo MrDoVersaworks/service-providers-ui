@@ -1,29 +1,46 @@
-// src/components/ServiceProviderRow.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ServiceProvider, Contract } from "../types/types";
 import { TableCell } from "@/components/ui/table";
 
 function ChevronDownIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-function ChevronUpIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path d="M18 15l-6-6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M6 9l6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
-/* default three-dot icon (used only if no actionSlot provided) */
+function ChevronUpIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M18 15l-6-6-6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function DefaultMoreIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
       <circle cx="12" cy="5" r="1.5" />
       <circle cx="12" cy="12" r="1.5" />
       <circle cx="12" cy="19" r="1.5" />
@@ -46,18 +63,34 @@ export default function ServiceProviderRow({
   onSelectContract,
   actionSlot,
 }: Props) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // Close the menu if you click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <>
-      {/* Main row: native <tr> so we can put onClick on it */}
-      <tr className="cursor-pointer hover:bg-gray-800" onClick={onToggle} role="button" aria-expanded={isOpen}>
-        {/* Checkbox cell */}
+      {/* Summary Row */}
+      <tr
+        className="cursor-pointer hover:bg-gray-800"
+        onClick={onToggle}
+        role="button"
+        aria-expanded={isOpen}
+      >
+        {/* Checkbox */}
         <TableCell className="px-4 py-3">
           <input
             type="checkbox"
-            onClick={(e) => {
-              // don't toggle the row when clicking checkbox
-              e.stopPropagation();
-            }}
+            onClick={(e) => e.stopPropagation()}
             aria-label={`Select ${provider.name}`}
             className="form-checkbox"
           />
@@ -66,25 +99,55 @@ export default function ServiceProviderRow({
         {/* Data cells */}
         <TableCell className="px-4 py-3">{provider.name}</TableCell>
         <TableCell className="px-4 py-3">{provider.company}</TableCell>
-        <TableCell className="px-4 py-3">{(provider as any).specialty ?? ""}</TableCell>
+        <TableCell className="px-4 py-3">
+          {(provider as any).specialty ?? ""}
+        </TableCell>
         <TableCell className="px-4 py-3">{provider.email}</TableCell>
         <TableCell className="px-4 py-3">{provider.phone}</TableCell>
-        <TableCell className="px-4 py-3">{(provider as any).location ?? ""}</TableCell>
+        <TableCell className="px-4 py-3">
+          {(provider as any).location ?? ""}
+        </TableCell>
 
-        {/* Actions: actionSlot (three dots) + chevron */}
+        {/* Actions (3-dot menu + chevron) */}
         <TableCell className="px-4 py-3 text-right">
-          <div className="flex items-center justify-end gap-3">
+          <div className="relative flex items-center justify-end gap-3" ref={menuRef}>
+            {/* Three-dot button */}
             <button
               onClick={(e) => {
-                // stop row toggle when clicking the action menu
                 e.stopPropagation();
-                // action behaviour (open menu) should be implemented where actionSlot is provided
+                setMenuOpen((prev) => !prev);
               }}
               aria-label={`Row options for ${provider.name}`}
               className="p-1"
             >
               {actionSlot ?? <DefaultMoreIcon />}
             </button>
+
+            {/* Dropdown menu */}
+            {menuOpen && (
+              <div className="absolute right-0 top-7 w-32 bg-gray-800 border border-gray-700 rounded shadow-lg z-50">
+                <button
+                  className="block w-full text-left px-3 py-2 hover:bg-gray-700 text-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    alert(`Edit ${provider.name}`);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="block w-full text-left px-3 py-2 hover:bg-gray-700 text-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    alert(`Delete ${provider.name}`);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
 
             <span className="inline-flex items-center">
               {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
@@ -93,11 +156,12 @@ export default function ServiceProviderRow({
         </TableCell>
       </tr>
 
-      {/* Expandable details row (native tr + td with colSpan to avoid TableCell prop issues) */}
+      {/* Expanded Details Row */}
       {isOpen && (
         <tr className="bg-gray-900">
           <td colSpan={8} className="p-4">
             <div className="space-y-4">
+              {/* Contracts */}
               <div>
                 <h4 className="font-medium mb-2">Clients & Contracts</h4>
                 <ul className="list-disc list-inside text-sm space-y-2">
@@ -118,12 +182,14 @@ export default function ServiceProviderRow({
                 </ul>
               </div>
 
+              {/* Services */}
               <div>
                 <h4 className="font-medium mb-2">Services & Pricing</h4>
                 <ul className="list-disc list-inside text-sm space-y-1">
                   {provider.services.map((s, i) => (
                     <li key={i}>
-                      {s.name}: <span className="font-medium">${s.price}</span>
+                      {s.name}:{" "}
+                      <span className="font-medium">${s.price}</span>
                     </li>
                   ))}
                 </ul>
