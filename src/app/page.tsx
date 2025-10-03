@@ -14,7 +14,7 @@ import ServiceProviderRow from "@/components/ServiceProviderRow";
 import ContractModal from "@/components/ContractModal";
 import { Contract } from "@/types/types";
 
-// Inline three-dot menu icon
+// Three-dot action icon
 function MoreIcon() {
   return (
     <svg
@@ -32,7 +32,7 @@ function MoreIcon() {
   );
 }
 
-// Inline plus icon
+// Plus icon for the Add button
 function PlusIcon() {
   return (
     <svg
@@ -57,6 +57,7 @@ export default function Page() {
   const [query, setQuery] = useState("");
   const [openRow, setOpenRow] = useState<number | null>(null);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const filteredProviders = mockProviders.filter((p) =>
     [
@@ -73,6 +74,14 @@ export default function Page() {
       .includes(query.toLowerCase())
   );
 
+  const handleBulkUpload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,.json";
+    input.onchange = () => alert("Bulk upload placeholder triggered");
+    input.click();
+  };
+
   return (
     <main className="min-h-screen bg-gray-950 p-6 text-white">
       {/* Header */}
@@ -84,10 +93,16 @@ export default function Page() {
           <p className="text-gray-400 text-sm">{mockProviders.length} total</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
+          >
             <PlusIcon /> Add Service Provider
           </button>
-          <button className="px-3 py-2 bg-gray-700 hover:bg-gray-800 rounded text-white">
+          <button
+            onClick={handleBulkUpload}
+            className="px-3 py-2 bg-gray-700 hover:bg-gray-800 rounded text-white"
+          >
             Bulk Upload
           </button>
         </div>
@@ -106,12 +121,10 @@ export default function Page() {
           <input
             type="date"
             className="p-2 rounded bg-gray-800 border border-gray-700 text-gray-300"
-            pattern="\d{2}-\d{2}-\d{4}"
           />
           <input
             type="date"
             className="p-2 rounded bg-gray-800 border border-gray-700 text-gray-300"
-            pattern="\d{2}-\d{2}-\d{4}"
           />
         </div>
       </div>
@@ -143,7 +156,7 @@ export default function Page() {
                   setOpenRow(openRow === provider.id ? null : provider.id)
                 }
                 onSelectContract={(c) => setSelectedContract(c)}
-                actionSlot={<MoreIcon />} // pass in the 3 dots
+                actionSlot={<MoreIcon />} // pass the 3-dot menu
               />
             ))
           ) : (
@@ -162,6 +175,55 @@ export default function Page() {
           contract={selectedContract}
           onClose={() => setSelectedContract(null)}
         />
+      )}
+
+      {/* Add Service Provider Modal (Dummy) */}
+      {showAddModal && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            className="bg-gray-900 p-6 rounded-lg w-96"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-semibold mb-4">Add Service Provider</h2>
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="Name"
+                className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-gray-300"
+              />
+              <input
+                type="text"
+                placeholder="Company"
+                className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-gray-300"
+              />
+              <input
+                type="text"
+                placeholder="Specialty"
+                className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-gray-300"
+              />
+            </div>
+            <div className="flex justify-end mt-4 gap-2">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-800"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  alert("Provider added (placeholder)");
+                  setShowAddModal(false);
+                }}
+                className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );
